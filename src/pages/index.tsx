@@ -1,12 +1,12 @@
 import { type NextPage } from "next";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Head from "next/head";
 import axios from "axios";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInView } from "react-intersection-observer";
 
 const Home: NextPage = () => {
-  const [issues, setIssues] = useState([]);
   const { data: session } = useSession();
 
   async function getAuthenticatedUsername(accessToken: string) {
@@ -17,51 +17,48 @@ const Home: NextPage = () => {
         },
       });
       const username: string = data.login;
+      console.log(username);
       return username;
     } catch (error) {
+      console.log("error");
       console.error(error);
     }
   }
 
-  async function fetchUserIssues(username: string) {
-    try {
-      const { data } = await axios.get(
-        `https://api.github.com/search/issues?q=type:issue+is:open+author:${username}`
-      );
-
-      console.log(data);
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
-  async function fetchIssues(username: string, pageNumber = 0) {
-    const pageSize = 10;
-    const startIndex = pageNumber * pageSize;
-    const url = `https://api.github.com/search/issues?q=type:issue+is:open+author:${username}&per_page=${pageSize}&page=${
-      pageNumber + 1
-    }`;
-    const { data } = await axios.get(url);
-
-    const issues = data.items;
-    const hasMore = issues.length === pageSize;
-    const nextIndex = hasMore ? startIndex + pageSize : undefined;
-    console.log(issues, hasMore, nextIndex);
-
-    return {
-      issues,
-      hasMore,
-      nextIndex,
-    };
-  }
-
-  // allow user to fetch their issues
-  const handleIssue = async () => {
+  // fetch issues by username
+  async function fetchIssues(pageNumber = 0) {
     const username = await getAuthenticatedUsername(session?.accessToken);
-    if (username !== undefined) {
-      fetchIssues(username);
+    const pageSize = 1;
+    const startIndex = pageNumber * pageSize;
+    const url = `https://api.github.com/search/issues?q=author:${username}+is:open&sort=created&order=asc&per_page=${pageSize}&page=${pageNumber}`;
+    if (username) {
+      const { data } = await axios.get(url);
+      const issues = data.items;
+      const hasMore = issues.length === pageSize;
+      const nextIndex = hasMore ? startIndex + pageSize : undefined;
+      return {
+        issues,
+        hasMore,
+        nextIndex,
+      };
     }
-  };
+  }
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isFetching } =
+    useInfiniteQuery(
+      ["issues"],
+      ({ pageParam = 1 }) => fetchIssues(pageParam),
+      {
+        getNextPageParam: (lastPage) => lastPage?.nextIndex,
+      }
+    );
+
+  const { ref, inView } = useInView();
+  useEffect(() => {
+    if (inView) {
+      fetchNextPage();
+    }
+  }, [inView]);
 
   return (
     <>
@@ -80,7 +77,40 @@ const Home: NextPage = () => {
             sign in
           </button>
         )}
-        <button onClick={handleIssue}>get issues</button>
+      </div>
+      {/* <button onClick={() => fetchIssues(1)}>get</button> */}
+      <div>
+        {data?.pages.map((page, index: number) => (
+          <ul key={index}>
+            {page?.issues.map((issue: { title: string }, index: number) => (
+              <li key={index} className="h-screen">
+                {issue.title}
+              </li>
+            ))}
+          </ul>
+        ))}
+
+        {/* {hasNextPage && (
+          <button onClick={() => fetchNextPage()} disabled={isFetchingNextPage}>
+            {isFetchingNextPage ? "Loading more..." : "Load more"}
+          </button>
+        )} */}
+        <div>
+          <button
+            ref={ref}
+            onClick={() => fetchNextPage()}
+            disabled={!hasNextPage || isFetchingNextPage}
+          >
+            {isFetchingNextPage
+              ? "Loading more..."
+              : hasNextPage
+              ? "Load Newer"
+              : "Nothing more to load"}
+          </button>
+        </div>
+        <div>
+          {isFetching && !isFetchingNextPage ? "Background Updating..." : null}
+        </div>
       </div>
     </>
   );
