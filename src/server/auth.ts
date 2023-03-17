@@ -61,6 +61,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: env.GITHUB_CLIENT_SECRET,
       // scope: 'repo read:user repo:status public_repo',
     }),
+
     /**
      * ...add more providers here
      *
