@@ -5,15 +5,20 @@ import { useSession } from "next-auth/react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
-import { useInView } from "react-intersection-observer";
+import Issue from "~/components/Issue";
+
 type Issue = {
-  items: Array<{ id: number; title: string; body: string }>;
+  items: Array<{
+    id: number;
+    title: string;
+    body: string;
+    labels: Array<{ color: string; name: string }>;
+  }>;
 };
 const Home: NextPage = () => {
   const [issuesList, setIssuesList] = useState<Array<Issue>>([]);
   const [query, setQuery] = useState<String>("");
   const { data: session, status } = useSession();
-  const { ref, inView } = useInView();
 
   const router = useRouter();
   useEffect(() => {
@@ -43,7 +48,8 @@ const Home: NextPage = () => {
       const username = await getAuthenticatedUsername(session?.accessToken);
       const pageSize = 10;
       if (username) {
-        const url = `https://api.github.com/search/issues?q=author:${username}&sort=created&order=asc&per_page=${pageSize}&page=${pageNumber}`;
+        // fetch issues with labels and exclude pull requests
+        const url = `https://api.github.com/search/issues?q=author:${username}+type:issue+is:open+-is:pr&sort=created&order=asc&per_page=${pageSize}&page=${pageNumber}`;
         const { data } = await axios.get(url);
         return data;
       }
@@ -93,15 +99,15 @@ const Home: NextPage = () => {
     return issuesList
       .flatMap((issue) => issue.items)
       .filter((item) => {
+        const matchTitle = item?.title
+          ?.toLowerCase()
+          .includes(query.toLowerCase());
         const matchBody = item?.body
           ?.toLowerCase()
           .includes(query.toLowerCase());
-        return matchBody;
+        return matchTitle || matchBody;
       });
   }, [query, issuesList]);
-  const handleSearch = () => {
-    setQuery("");
-  };
 
   const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(event.target.value);
@@ -109,34 +115,28 @@ const Home: NextPage = () => {
 
   return (
     <>
-      <div className="flex w-full flex-col justify-center">
-        <button className="btn" onClick={() => signOut()}>
-          sign out
-        </button>
+      <div className="flex w-full flex-col justify-center gap-8 py-20 px-8">
+        <div className="flex items-center">
+          <h1 className="text-3xl font-bold">Github Task Manager</h1>
+          <button className="btn ml-auto" onClick={() => signOut()}>
+            sign out
+          </button>
+        </div>
         <input
           type="text"
+          className="input-bordered input"
           value={query as string}
+          placeholder="Search issues by title or body"
           onChange={handleQueryChange}
         />
-        <button onClick={handleSearch}>Clear</button>
-        <ul>
+        <ul className="flex flex-col gap-4">
           {query
-            ? filteredIssues.map((item) => (
-                <li key={item.id} className="h-screen">
-                  <h1 className="font-bold">{item.title}</h1>
-                  <p>{item.body}</p>
-                </li>
-              ))
+            ? filteredIssues.map((item) => <Issue key={item.id} item={item} />)
             : issuesList.map((issue, i) =>
-                issue.items?.map((issue) => (
-                  <li key={issue.id} className="h-screen">
-                    <h1 className="font-bold">{issue.title}</h1>
-                    <p>{issue.body}</p>
-                  </li>
-                ))
+                issue.items?.map((item) => <Issue key={item.id} item={item} />)
               )}
           {isFetchingNextPage && <li>Loading more...</li>}
-          {!hasNextPage && <li>End of issues</li>}
+          {!hasNextPage && <li className="text-center">End of issues</li>}
         </ul>
       </div>
     </>
