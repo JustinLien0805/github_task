@@ -12,12 +12,23 @@ type Issue = {
     id: number;
     title: string;
     body: string;
+    created_at: string;
     labels: Array<{ color: string; name: string }>;
   }>;
 };
+
+type Query = {
+  text: string;
+  label: string;
+  sortTime: string;
+};
 const Home: NextPage = () => {
   const [issuesList, setIssuesList] = useState<Array<Issue>>([]);
-  const [query, setQuery] = useState<String>("");
+  const [query, setQuery] = useState<Query>({
+    text: "",
+    label: "",
+    sortTime: "",
+  });
   const { data: session, status } = useSession();
 
   const router = useRouter();
@@ -35,7 +46,6 @@ const Home: NextPage = () => {
         },
       });
       const username: string = data.login;
-      console.log(username);
       return username;
     } catch (error) {
       console.error(error);
@@ -43,13 +53,13 @@ const Home: NextPage = () => {
   }
 
   // fetch issues by username
+  // after getting the username fetch issues with labels and exclude pull requests and sort by created date in descending order wtih pagination
   async function fetchIssues(pageNumber = 0) {
     if (session?.accessToken) {
       const username = await getAuthenticatedUsername(session?.accessToken);
       const pageSize = 10;
       if (username) {
-        // fetch issues with labels and exclude pull requests
-        const url = `https://api.github.com/search/issues?q=author:${username}+type:issue+is:open+-is:pr&sort=created&order=asc&per_page=${pageSize}&page=${pageNumber}`;
+        const url = `https://api.github.com/search/issues?q=author:${username}+type:issue+is:open+-is:pr&sort=created&order=desc&per_page=${pageSize}&page=${pageNumber}`;
         const { data } = await axios.get(url);
         return data;
       }
@@ -72,7 +82,6 @@ const Home: NextPage = () => {
     );
 
   useEffect(() => {
-    console.log(data);
     if (data) {
       const newIssuesList: Array<Issue> = data.pages;
       setIssuesList(newIssuesList);
@@ -80,7 +89,6 @@ const Home: NextPage = () => {
   }, [data]);
 
   useEffect(() => {
-    console.log(hasNextPage);
     const onScroll = (event: any) => {
       const { scrollHeight, scrollTop, clientHeight } =
         event.target.documentElement;
@@ -93,24 +101,45 @@ const Home: NextPage = () => {
     return () => document.removeEventListener("scroll", onScroll);
   }, []);
 
-  console.log("issuesList:", issuesList);
-
   const filteredIssues = useMemo(() => {
-    return issuesList
+    const textFilter = issuesList
       .flatMap((issue) => issue.items)
       .filter((item) => {
         const matchTitle = item?.title
           ?.toLowerCase()
-          .includes(query.toLowerCase());
+          .includes(query.text.toLowerCase());
         const matchBody = item?.body
           ?.toLowerCase()
-          .includes(query.toLowerCase());
+          .includes(query.text.toLowerCase());
         return matchTitle || matchBody;
       });
+
+    const labelFilter = textFilter.filter((item) => {
+      if (query.label === "") {
+        return true; // No label query specified, so include all issues
+      } else {
+        return item.labels.some(
+          (label) => label.name.toLowerCase() === query.label.toLowerCase()
+        );
+      }
+    });
+    let timeFilter = labelFilter;
+    if (query.sortTime === "ASC") {
+      timeFilter = timeFilter.sort(
+        (a, b) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      );
+    } else if (query.sortTime === "DESC") {
+      timeFilter = timeFilter.sort(
+        (a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+    }
+    return timeFilter;
   }, [query, issuesList]);
 
   const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setQuery(event.target.value);
+    setQuery({ ...query, text: event.target.value });
   };
 
   return (
@@ -125,10 +154,69 @@ const Home: NextPage = () => {
         <input
           type="text"
           className="input-bordered input"
-          value={query as string}
+          value={query.text}
           placeholder="Search issues by title or body"
           onChange={handleQueryChange}
         />
+        <div className="flex">
+          <div className="dropdown">
+            <label tabIndex={0} className="btn m-1">
+              {query.label || "Sorted by Label"}
+            </label>
+            <ul
+              tabIndex={0}
+              className="dropdown-content menu rounded-box w-52 bg-base-100 p-2 shadow"
+            >
+              <li>
+                <a onClick={() => setQuery({ ...query, label: "done" })}>
+                  done
+                </a>
+              </li>
+              <li>
+                <a onClick={() => setQuery({ ...query, label: "in progress" })}>
+                  in progress
+                </a>
+              </li>
+              <li>
+                <a onClick={() => setQuery({ ...query, label: "open" })}>
+                  open
+                </a>
+              </li>
+            </ul>
+          </div>
+          <div className="dropdown">
+            <label tabIndex={1} className="btn m-1">
+              {query.sortTime || "Sorted by time"}
+            </label>
+            <ul
+              tabIndex={1}
+              className="dropdown-content menu rounded-box w-52 bg-base-100 p-2 shadow"
+            >
+              <li>
+                <a onClick={() => setQuery({ ...query, sortTime: "ASC" })}>
+                  ASC
+                </a>
+              </li>
+              <li>
+                <a onClick={() => setQuery({ ...query, sortTime: "DESC" })}>
+                  DESC
+                </a>
+              </li>
+            </ul>
+          </div>
+          <button
+            className="btn m-1"
+            onClick={() =>
+              setQuery({
+                text: "",
+                label: "",
+                sortTime: "",
+              })
+            }
+          >
+            clear filter
+          </button>
+        </div>
         <ul className="flex flex-col gap-4">
           {query
             ? filteredIssues.map((item) => <Issue key={item.id} item={item} />)
