@@ -10,9 +10,11 @@ import Issue from "~/components/Issue";
 type Issue = {
   items: Array<{
     id: number;
+    url: string;
     title: string;
     body: string;
     created_at: string;
+    state: string;
     labels: Array<{ color: string; name: string }>;
   }>;
 };
