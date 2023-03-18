@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@hookform/resolvers": "^2.9.11",
     "@octokit/rest": "^19.0.7",
     "@tanstack/react-query": "^4.24.10",
     "@tanstack/react-query-devtools": "^4.26.1",
@@ -19,6 +20,7 @@
     "octokit": "^2.0.14",
     "react": "18.2.0",
     "react-dom": "18.2.0",
+    "react-hook-form": "^7.43.7",
     "react-intersection-observer": "^9.4.3",
     "zod": "^3.20.2"
   },

@@ -24,6 +24,7 @@ type Query = {
   label: string;
   sortTime: string;
 };
+
 const Home: NextPage = () => {
   const [issuesList, setIssuesList] = useState<Array<Issue>>([]);
   const [query, setQuery] = useState<Query>({
@@ -89,7 +90,6 @@ const Home: NextPage = () => {
       setIssuesList(newIssuesList);
     }
   }, [data]);
-
   useEffect(() => {
     const onScroll = (event: any) => {
       const { scrollHeight, scrollTop, clientHeight } =
@@ -160,7 +160,7 @@ const Home: NextPage = () => {
           placeholder="Search issues by title or body"
           onChange={handleQueryChange}
         />
-        <div className="flex">
+        <div className="flex flex-wrap">
           <div className="dropdown">
             <label tabIndex={0} className="btn m-1">
               {query.label || "Sorted by Label"}
@@ -225,7 +225,9 @@ const Home: NextPage = () => {
             : issuesList.map((issue, i) =>
                 issue.items?.map((item) => <Issue key={item.id} item={item} />)
               )}
-          {isFetchingNextPage && <li>Loading more...</li>}
+          {isFetchingNextPage && (
+            <li className="text-center">Loading more...</li>
+          )}
           {!hasNextPage && <li className="text-center">End of issues</li>}
         </ul>
       </div>

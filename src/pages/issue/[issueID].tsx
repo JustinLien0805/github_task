@@ -1,31 +1,287 @@
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/router";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-const Issue = () => {
-  const router = useRouter();
-  const { url } = router.query;
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { useSession, getSession } from "next-auth/react";
+import { GetServerSideProps } from "next";
+import { Session } from "next-auth";
 
-  async function fetchIssueByUrl() {
+interface Issue {
+  id: number;
+  url: string;
+  title: string;
+  body: string;
+  created_at: string;
+  state: string;
+  labels: Array<{ color: string; name: string }>;
+}
+interface ComponentProps {
+  session: Session | null;
+  issueData: Issue;
+}
+
+const IssueFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  body: z.string().min(30, "Body must be at least 30 words"),
+  label: z.string().min(1, "Label is required"),
+});
+
+const Issue = (issueData: Issue) => {
+  const router = useRouter();
+  const { data: session } = useSession();
+  const { url } = router.query;
+  const queryClient = useQueryClient();
+
+  // query for issue details
+  const { data } = useQuery(
+    ["issue"],
+    async () => {
+      if (typeof url !== "string") {
+        throw new Error("Invalid URL type");
+      }
+      const { data } = await axios.get<Issue>(url);
+      return data;
+    },
+    {
+      initialData: issueData,
+    }
+  );
+
+  // Set up form for editing title and body
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(IssueFormSchema),
+  });
+
+  // mutation for edit title and body
+  async function updateIssue({
+    url,
+    title,
+    body,
+  }: {
+    url: string | string[] | undefined;
+    title: string;
+    body: string;
+  }) {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+    };
+
+    const data = {
+      title,
+      body,
+    };
     if (typeof url !== "string") {
       throw new Error("Invalid URL type");
     }
-    const { data } = await axios.get(url);
-    console.log(data);
-    return data;
+    try {
+      const response = await axios.patch(url, data, config);
+      return response.data;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  const { data, isLoading } = useQuery(["issue"], fetchIssueByUrl);
+  const updateIssueMutation = useMutation(updateIssue, {
+    onSuccess: () => {
+      alert("Issue updated successfully");
+      queryClient.invalidateQueries(["issue"]);
+    },
+    onError: (error) => {
+      alert(error);
+    },
+  });
 
-  //   if (isLoading) {
-  //     return <div>Loading...</div>;
-  //   }
+  // close issue
+  async function closeIssue(url: string | string[] | undefined) {
+    const config = {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session?.accessToken}`,
+      },
+    };
 
+    const data = {
+      state: "closed",
+    };
+    if (typeof url !== "string") {
+      throw new Error("Invalid URL type");
+    }
+    try {
+      const response = await axios.patch(url, data, config);
+      return response.data;
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const closeIssueMutation = useMutation(closeIssue, {
+    onSuccess: () => {
+      alert("Issue closed successfully");
+      router.push("/home");
+      queryClient.invalidateQueries(["issue"]);
+    },
+    onError: (error) => {
+      alert(error);
+    },
+  });
   return (
-    <div>
-      <h1>Issue: {url}</h1>
-    </div>
+    <>
+      <div className="flex w-screen flex-col items-center gap-4">
+        <h1>Issue: {data?.title}</h1>
+        <p>{data?.body}</p>
+        <div className="dropdown flex items-center">
+          <h2>label:</h2>
+          <label>
+            {data?.labels?.length > 0 ? data?.labels[0]?.name : "no label"}
+          </label>
+        </div>
+        <label htmlFor="my-modal" className="btn-warning btn">
+          Edit
+        </label>
+        <button
+          className="btn-error btn"
+          onClick={async () => {
+            await closeIssueMutation.mutateAsync(url);
+          }}
+        >
+          Delete
+        </button>
+      </div>
+      {/* modal for edit title and body */}
+      <input type="checkbox" id="my-modal" className="modal-toggle" />
+      <div className="modal">
+        <div className="reletive modal-box">
+          <label
+            htmlFor="my-modal"
+            className="btn-sm btn-circle btn absolute right-2 top-2"
+          >
+            ✕
+          </label>
+          <h3 className="text-lg font-bold">Edit Issue</h3>
+          <form
+            className="flex flex-col gap-4"
+            onSubmit={handleSubmit(async (formData) => {
+              console.log(formData.title, formData.body, formData.label);
+              try {
+                const updatedIssue = await updateIssueMutation.mutateAsync({
+                  url: url,
+                  title: formData.title,
+                  body: formData.body,
+                });
+                console.log("Issue updated:", updatedIssue);
+              } catch (error) {
+                console.error("Error updating issue:", error);
+              }
+            })}
+          >
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Title</span>
+                <span className="label-text-alt">required</span>
+              </label>
+              <input
+                {...register("title")}
+                type="text"
+                defaultValue={data?.title}
+                className={`input-bordered input w-full ${
+                  errors.title ? "border-red-500" : ""
+                }`}
+              />
+              {errors.title && (
+                <p className="text-red-500">
+                  {errors.title.message as React.ReactNode}
+                </p>
+              )}
+            </div>
+            <div className="form-control">
+              <label className="label">
+                <span className="label-text">Body</span>
+                <span className="label-text-alt">at least 30 words</span>
+              </label>
+              <textarea
+                defaultValue={data?.body}
+                {...register("body")}
+                className={`textarea-bordered textarea h-24 ${
+                  errors.body ? "border-red-500" : ""
+                }`}
+              ></textarea>
+              {errors.body && (
+                <p className="text-red-500">
+                  {errors.body.message as React.ReactNode}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="label">
+                <span className="label-text">Label</span>
+              </label>
+              <select
+                className="select-bordered select w-full max-w-xs"
+                {...register("label")}
+                value={
+                  data?.labels?.length > 0 ? data?.labels[0]?.name : "no label"
+                }
+              >
+                <option value="" disabled>
+                  Select a label
+                </option>
+                <option value={"done"}>done</option>
+                <option value={"in progress"}>in progress</option>
+                <option value={"open"}>open</option>
+              </select>
+              {errors.label && (
+                <p className="text-red-500">
+                  {errors.label.message as React.ReactNode}
+                </p>
+              )}
+            </div>
+            <div className="modal-action">
+              <button type="submit" className="btn">
+                Save
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </>
   );
 };
 
 export default Issue;
+
+async function fetchIssueByUrl(url: string): Promise<Issue> {
+  const { data } = await axios.get<Issue>(url);
+  return data;
+}
+
+export const getServerSideProps: GetServerSideProps<ComponentProps> = async (
+  context
+) => {
+  const session = await getSession(context);
+  const url = context.query.url;
+
+  if (typeof url !== "string") {
+    return {
+      notFound: true,
+    };
+  }
+
+  const data = await fetchIssueByUrl(url);
+
+  return {
+    props: {
+      session,
+      issueData: data,
+    },
+  };
+};
