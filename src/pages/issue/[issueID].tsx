@@ -17,6 +17,10 @@ interface Issue {
   created_at: string;
   state: string;
   labels: Array<{ color: string; name: string }>;
+  user: {
+    login: string;
+    avatar_url: string;
+  };
 }
 interface ComponentProps {
   session: Session | null;
@@ -43,6 +47,7 @@ const Issue = (issueData: Issue) => {
         throw new Error("Invalid URL type");
       }
       const { data } = await axios.get<Issue>(url);
+      console.log(data);
       return data;
     },
     {
@@ -64,10 +69,12 @@ const Issue = (issueData: Issue) => {
     url,
     title,
     body,
+    label,
   }: {
     url: string | string[] | undefined;
     title: string;
     body: string;
+    label: string;
   }) {
     const config = {
       headers: {
@@ -75,17 +82,27 @@ const Issue = (issueData: Issue) => {
         Authorization: `Bearer ${session?.accessToken}`,
       },
     };
-
-    const data = {
+    const titleBodyData = {
       title,
       body,
     };
+
     if (typeof url !== "string") {
       throw new Error("Invalid URL type");
     }
+    console.log(url);
     try {
-      const response = await axios.patch(url, data, config);
-      return response.data;
+      const labelResponse = await axios.put(
+        `${url}/labels`,
+        { labels: [label] },
+        config
+      );
+
+      if (labelResponse.status !== 200) {
+        throw new Error("Label not updated");
+      }
+      const titleBodyResponse = await axios.patch(url, titleBodyData, config);
+      return titleBodyResponse.data;
     } catch (error) {
       console.log(error);
     }
@@ -128,7 +145,7 @@ const Issue = (issueData: Issue) => {
     onSuccess: () => {
       alert("Issue closed successfully");
       router.push("/home");
-      queryClient.invalidateQueries(["issue"]);
+      queryClient.invalidateQueries(["issue", "issues"]);
     },
     onError: (error) => {
       alert(error);
@@ -136,11 +153,19 @@ const Issue = (issueData: Issue) => {
   });
   return (
     <>
-      <div className="flex w-screen flex-col items-center gap-4">
-        <h1>Issue: {data?.title}</h1>
+      <div className="flex w-screen flex-col items-center gap-4  py-20 px-8">
+        <div className="flex items-center gap-2">
+          <div className="avatar">
+            <div className="h-8 w-8 rounded-full">
+              <img src={data?.user?.avatar_url} />
+            </div>
+          </div>
+          <p>{data?.user?.login}</p>
+        </div>
+        <p className="text-3xl font-bold">Issue: {data?.title}</p>
         <p>{data?.body}</p>
         <div className="dropdown flex items-center">
-          <h2>label:</h2>
+          <h2>label: </h2>
           <label>
             {data?.labels?.length > 0 ? data?.labels[0]?.name : "no label"}
           </label>
@@ -177,6 +202,7 @@ const Issue = (issueData: Issue) => {
                   url: url,
                   title: formData.title,
                   body: formData.body,
+                  label: formData.label,
                 });
                 console.log("Issue updated:", updatedIssue);
               } catch (error) {
@@ -228,9 +254,6 @@ const Issue = (issueData: Issue) => {
               <select
                 className="select-bordered select w-full max-w-xs"
                 {...register("label")}
-                value={
-                  data?.labels?.length > 0 ? data?.labels[0]?.name : "no label"
-                }
               >
                 <option value="" disabled>
                   Select a label

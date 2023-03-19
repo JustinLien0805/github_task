@@ -58,17 +58,17 @@ const Home: NextPage = () => {
   // fetch issues by username
   // after getting the username fetch issues with labels and exclude pull requests and sort by created date in descending order wtih pagination
   async function fetchIssues(pageNumber = 0) {
-    if (session?.accessToken) {
-      const username = await getAuthenticatedUsername(session?.accessToken);
-      const pageSize = 10;
-      if (username) {
-        const url = `https://api.github.com/search/issues?q=author:${username}+type:issue+is:open+-is:pr&sort=created&order=desc&per_page=${pageSize}&page=${pageNumber}`;
-        const { data } = await axios.get(url);
-        return data;
-      }
-    } else {
-      return [];
+    if (!session?.accessToken) {
+      throw new Error("No access token");
     }
+    const username = await getAuthenticatedUsername(session?.accessToken);
+    const pageSize = 10;
+    if (!username) {
+      throw new Error("No username");
+    }
+    const url = `https://api.github.com/search/issues?q=author:${username}+type:issue+is:open+-is:pr&sort=created&order=desc&per_page=${pageSize}&page=${pageNumber}`;
+    const { data } = await axios.get(url);
+    return data;
   }
 
   const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
@@ -77,7 +77,7 @@ const Home: NextPage = () => {
       ({ pageParam = 1 }) => fetchIssues(pageParam),
       {
         getNextPageParam: (lastPage, allPages) => {
-          const maxpages = lastPage.total_count / 10;
+          const maxpages = Math.ceil(lastPage.total_count / 10);
           const nextpage = allPages.length + 1;
           return nextpage <= maxpages ? nextpage : undefined;
         },
