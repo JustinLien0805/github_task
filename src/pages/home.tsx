@@ -13,6 +13,7 @@ type Issue = {
     url: string;
     title: string;
     body: string;
+    repository_url: string;
     created_at: string;
     state: string;
     labels: Array<{ color: string; name: string }>;

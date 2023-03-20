@@ -8,7 +8,7 @@ import { z } from "zod";
 import { useSession, getSession } from "next-auth/react";
 import { type GetServerSideProps } from "next";
 import { type Session } from "next-auth";
-
+import { getRepoUrl, getRepoName } from "~/utils/common";
 interface Issue {
   id: number;
   url: string;
@@ -152,16 +152,6 @@ const Issue = (issueData: Issue) => {
     },
   });
 
-  function getRepoName(repoUrl: string) {
-    repoUrl.lastIndexOf("/");
-    const repoName = repoUrl.slice(repoUrl.lastIndexOf("/") + 1);
-    return repoName;
-  }
-  function getRepoUrl(repoUrl: string) {
-    const newrepoUrl =
-      repoUrl?.slice(0, 8) + repoUrl?.slice(12, 22) + repoUrl?.slice(28);
-    return newrepoUrl;
-  }
   return (
     <>
       <div className="flex h-screen w-screen flex-col items-center gap-8 px-2 pt-8 sm:py-20 sm:px-8">
@@ -201,20 +191,20 @@ const Issue = (issueData: Issue) => {
             </div>
             <p>Created at: {data?.created_at}</p>
           </div>
-          <p className="text-lg">
-            From:{" "}
-            <a
-              href={getRepoUrl(data?.repository_url)}
-              className="link-info link"
-              target="_blank"
-              rel="noreferrer"
-            >
-              {getRepoName(data?.repository_url || "")}
-            </a>
-          </p>
-          <p className="rounded-lg border-2 p-4 text-lg">
-            {data?.body}
-          </p>
+          {data?.repository_url && (
+            <p className="text-lg">
+              From:{" "}
+              <a
+                href={getRepoUrl(data?.repository_url)}
+                className="link-info link"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {getRepoName(data?.repository_url)}
+              </a>
+            </p>
+          )}
+          <p className="rounded-lg border-2 p-4 text-lg">{data?.body}</p>
 
           <div className="flex gap-2">
             <label htmlFor="my-modal" className="btn-warning btn flex-1">
