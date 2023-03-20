@@ -15,7 +15,7 @@ const Home: NextPage = () => {
   useEffect(() => {
     console.log(status);
     if (session?.user) {
-      router.push("/home");
+      void router.push("/home");
     }
   }, [session]);
   return (

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { useRouter } from "next/router";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
@@ -6,8 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useSession, getSession } from "next-auth/react";
-import { GetServerSideProps } from "next";
-import { Session } from "next-auth";
+import { type GetServerSideProps } from "next";
+import { type Session } from "next-auth";
 
 interface Issue {
   id: number;
@@ -153,34 +153,58 @@ const Issue = (issueData: Issue) => {
   });
   return (
     <>
-      <div className="flex w-screen flex-col items-center gap-4  py-20 px-8">
-        <div className="flex items-center gap-2">
-          <div className="avatar">
-            <div className="h-8 w-8 rounded-full">
-              <img src={data?.user?.avatar_url} />
+      <div className="flex h-screen w-screen flex-col items-center gap-8 py-20 px-2 sm:px-8">
+        <nav className="flex w-3/5 max-w-2xl items-center">
+          <h1
+            className="mr-auto cursor-pointer text-3xl font-bold"
+            onClick={() => {
+              router.push("/home");
+            }}
+          >
+            Github Task Manager
+          </h1>
+          <button
+            className="btn"
+            onClick={() => {
+              router.push("/home");
+            }}
+          >
+            back
+          </button>
+        </nav>
+        <div className="flex w-3/5 max-w-2xl flex-col gap-4">
+          <div className="flex items-center gap-2">
+            <div className="avatar">
+              <div className="h-8 w-8 rounded-full">
+                <img src={data?.user?.avatar_url} />
+              </div>
+            </div>
+            <p>{data?.user?.login}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <p className="text-2xl font-bold sm:text-3xl">
+              Issue: {data?.title}
+            </p>
+            <div className=" badge-info badge">
+              {data?.labels?.length > 0 ? data?.labels[0]?.name : "no label"}
             </div>
           </div>
-          <p>{data?.user?.login}</p>
+          <p className="rounded-lg border-2 p-4 text-lg">{data?.body}</p>
+
+          <div className="flex gap-2">
+            <label htmlFor="my-modal" className="btn-warning btn flex-1">
+              Edit
+            </label>
+            <button
+              className="btn-error btn flex-1"
+              onClick={async () => {
+                await closeIssueMutation.mutateAsync(url);
+              }}
+            >
+              Delete
+            </button>
+          </div>
         </div>
-        <p className="text-3xl font-bold">Issue: {data?.title}</p>
-        <p>{data?.body}</p>
-        <div className="dropdown flex items-center">
-          <h2>label: </h2>
-          <label>
-            {data?.labels?.length > 0 ? data?.labels[0]?.name : "no label"}
-          </label>
-        </div>
-        <label htmlFor="my-modal" className="btn-warning btn">
-          Edit
-        </label>
-        <button
-          className="btn-error btn"
-          onClick={async () => {
-            await closeIssueMutation.mutateAsync(url);
-          }}
-        >
-          Delete
-        </button>
       </div>
       {/* modal for edit title and body */}
       <input type="checkbox" id="my-modal" className="modal-toggle" />

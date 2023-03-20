@@ -14,7 +14,10 @@ type Props = {
 const Issue = ({ item }: Props) => {
   const router = useRouter();
   const handleClick = () => {
-    router.push({ pathname: `/issue/${item.id}`, query: { url: item.url } });
+    void router.push({
+      pathname: `/issue/${item.id}`,
+      query: { url: item.url },
+    });
   };
   return (
     <li

@@ -39,7 +39,7 @@ declare module "next-auth" {
  **/
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session({ session, token, user }) {
+    session({ session, token }) {
       // if (session.user) {
       //   session.user.id = user.id;
       //   // session.user.role = user.role; <-- put other properties on the session here

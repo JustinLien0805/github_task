@@ -37,18 +37,24 @@ const Home: NextPage = () => {
   const router = useRouter();
   useEffect(() => {
     if (status === "unauthenticated") {
-      router.push("/");
+      void router.push("/");
     }
   }, [status]);
 
   async function getAuthenticatedUsername(accessToken: string) {
     try {
-      const { data } = await axios.get("https://api.github.com/user", {
+      const {
+        data,
+      }: {
+        data: {
+          login: string;
+        };
+      } = await axios.get("https://api.github.com/user", {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      const username: string = data.login;
+      const username = data.login;
       return username;
     } catch (error) {
       console.error(error);
