@@ -22,14 +22,18 @@ const Issue = ({ item }: Props) => {
   return (
     <li
       key={item.id}
-      className="min-h-96 flex cursor-pointer flex-col justify-center rounded-lg border-2 border-black p-4"
+      className="min-h-96 flex cursor-pointer flex-col justify-center gap-2 rounded-lg border-2 border-black p-4"
       onClick={handleClick}
     >
-      <h1 className="text-xl font-bold">{item.title}</h1>
+      <div className="flex items-center gap-2">
+        <h1 className="text-xl font-bold">{item.title}</h1>
+        {item.labels?.length > 0 ? (
+          <p className=" badge-info badge">{item.labels[0]?.name}</p>
+        ) : (
+          <p className=" badge-info badge">no label</p>
+        )}
+      </div>
       <p>{item.body}</p>
-      <p>{item.created_at}</p>
-      <p>{item.state}</p>
-      {item.labels?.length > 0 && <p>label: {item.labels[0]?.name}</p>}
     </li>
   );
 };

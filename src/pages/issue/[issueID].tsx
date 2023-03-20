@@ -17,6 +17,7 @@ interface Issue {
   created_at: string;
   state: string;
   labels: Array<{ color: string; name: string }>;
+  repository_url: string;
   user: {
     login: string;
     avatar_url: string;
@@ -47,7 +48,6 @@ const Issue = (issueData: Issue) => {
         throw new Error("Invalid URL type");
       }
       const { data } = await axios.get<Issue>(url);
-      console.log(data);
       return data;
     },
     {
@@ -151,12 +151,23 @@ const Issue = (issueData: Issue) => {
       alert(error);
     },
   });
+
+  function getRepoName(repoUrl: string) {
+    repoUrl.lastIndexOf("/");
+    const repoName = repoUrl.slice(repoUrl.lastIndexOf("/") + 1);
+    return repoName;
+  }
+  function getRepoUrl(repoUrl: string) {
+    const newrepoUrl =
+      repoUrl?.slice(0, 8) + repoUrl?.slice(12, 22) + repoUrl?.slice(28);
+    return newrepoUrl;
+  }
   return (
     <>
-      <div className="flex h-screen w-screen flex-col items-center gap-8 py-20 px-2 sm:px-8">
-        <nav className="flex w-3/5 max-w-2xl items-center">
+      <div className="flex h-screen w-screen flex-col items-center gap-8 px-2 pt-8 sm:py-20 sm:px-8">
+        <nav className="flex w-full max-w-2xl items-center sm:w-3/5">
           <h1
-            className="mr-auto cursor-pointer text-3xl font-bold"
+            className="mr-auto cursor-pointer text-2xl font-bold sm:text-3xl"
             onClick={() => {
               router.push("/home");
             }}
@@ -172,7 +183,7 @@ const Issue = (issueData: Issue) => {
             back
           </button>
         </nav>
-        <div className="flex w-3/5 max-w-2xl flex-col gap-4">
+        <div className="flex w-full max-w-2xl flex-col gap-4 sm:w-3/5">
           <div className="flex items-center gap-2">
             <div className="avatar">
               <div className="h-8 w-8 rounded-full">
@@ -185,11 +196,25 @@ const Issue = (issueData: Issue) => {
             <p className="text-2xl font-bold sm:text-3xl">
               Issue: {data?.title}
             </p>
-            <div className=" badge-info badge">
+            <div className=" badge-info badge mr-auto">
               {data?.labels?.length > 0 ? data?.labels[0]?.name : "no label"}
             </div>
+            <p>Created at: {data?.created_at}</p>
           </div>
-          <p className="rounded-lg border-2 p-4 text-lg">{data?.body}</p>
+          <p className="text-lg">
+            From:{" "}
+            <a
+              href={getRepoUrl(data?.repository_url)}
+              className="link-info link"
+              target="_blank"
+              rel="noreferrer"
+            >
+              {getRepoName(data?.repository_url || "")}
+            </a>
+          </p>
+          <p className="rounded-lg border-2 p-4 text-lg">
+            {data?.body}
+          </p>
 
           <div className="flex gap-2">
             <label htmlFor="my-modal" className="btn-warning btn flex-1">

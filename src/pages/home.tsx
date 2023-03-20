@@ -152,9 +152,11 @@ const Home: NextPage = () => {
 
   return (
     <>
-      <div className="flex w-full flex-col justify-center gap-8 py-20 px-8">
+      <div className="flex w-full flex-col justify-center gap-8 py-20 px-2">
         <div className="flex items-center">
-          <h1 className="text-3xl font-bold">Github Task Manager</h1>
+          <h1 className="text-2xl font-bold sm:text-3xl">
+            Github Task Manager
+          </h1>
           <button className="btn ml-auto" onClick={() => signOut()}>
             sign out
           </button>
