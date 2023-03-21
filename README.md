@@ -1,29 +1,56 @@
-# Create T3 App
+# GitHub Task Manageer
 
-This is a [T3 Stack](https://create.t3.gg/) project bootstrapped with `create-t3-app`.
+網站連結：[https://github-task-nine.vercel.app/](https://github-task-nine.vercel.app/)
 
-## What's next? How do I make an app with this?
+Tech Stack
+- Next.js
+- TypeScript
+- React Query
+- Tailwind CSS
+- React-Hook-Form
 
-We try to keep this project as simple as possible, so you can start with just the scaffolding we set up for you, and add additional things later when they become necessary.
+網站主要分為三個部分
+- Login Page
+- Home Page
+- Issue Detail Page
 
-If you are not familiar with the different technologies used in this project, please refer to the respective docs. If you still are in the wind, please join our [Discord](https://t3.gg/discord) and ask for help.
+## Login Page
 
-- [Next.js](https://nextjs.org)
-- [NextAuth.js](https://next-auth.js.org)
-- [Prisma](https://prisma.io)
-- [Tailwind CSS](https://tailwindcss.com)
-- [tRPC](https://trpc.io)
+使用 NextAuth 進行 GitHub 登入
 
-## Learn More
+在`server/auth.ts`中設定GitHub Provider並定義scope
 
-To learn more about the [T3 Stack](https://create.t3.gg/), take a look at the following resources:
 
-- [Documentation](https://create.t3.gg/)
-- [Learn the T3 Stack](https://create.t3.gg/en/faq#what-learning-resources-are-currently-available) — Check out these awesome tutorials
+## Home Page
+```javascript
+const url = `https://api.github.com/search/issues?q=author:${username}+type:issue+is:open+-is:pr&sort=created&order=desc&per_page=${pageSize}&page=${pageNumber}`;
+```
+url: 搜尋所有作者為使用者的 open issue，去除掉 pull request，並以 desc 排序，每次回傳 10 筆資料
 
-You can check out the [create-t3-app GitHub repository](https://github.com/t3-oss/create-t3-app) — your feedback and contributions are welcome!
+```javascript
+const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+    useInfiniteQuery(
+      ["issues"],
+      ({ pageParam = 1 }) => fetchIssues(pageParam),
+      {
+        getNextPageParam: (lastPage, allPages) => {
+          const maxpages = Math.ceil(lastPage.total_count / 10);
+          const nextpage = allPages.length + 1;
+          return nextpage <= maxpages ? nextpage : undefined;
+        },
+      }
+    );
+```
+用 React Query 中的 `useInfiniteQuery` 搭配 useEffect 及 eventlistener 達成 infinite scroll 
 
-## How do I deploy this?
+每次滑到底時都發送API載入額外10筆資料
 
-Follow our deployment guides for [Vercel](https://create.t3.gg/en/deployment/vercel), [Netlify](https://create.t3.gg/en/deployment/netlify) and [Docker](https://create.t3.gg/en/deployment/docker) for more information.
-# github_task
+
+
+
+另外設有 search bar, label, sorted by ASC/DESC 三種 filter ，可以同時對資料進行篩選
+
+## Issue Detail page
+展示該 issue 的詳細內容
+在 Edit 的 modal 中可以編輯 title 及 body, 此外也能夠更新 label(done/in progress/ open)
+Delete button 會將此 issue 的 state 轉為 close 並 redirect 回 home page 
