@@ -9,10 +9,10 @@ Tech Stack
 - Tailwind CSS
 - React-Hook-Form
 
-網站主要分為三個部分
-- Login Page
-- Home Page
-- Issue Detail Page
+##主要內容
+- [Login Page](#login-page)
+- [Home Page](#home-page)
+- [Issue Detail Page](#issue-detail-page)
 
 ## Login Page
 
