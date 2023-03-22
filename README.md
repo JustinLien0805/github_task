@@ -1,5 +1,6 @@
 # GitHub Task Manageer
 
+
 網站連結：[https://github-task-nine.vercel.app/](https://github-task-nine.vercel.app/)
 
 Tech Stack
@@ -9,7 +10,7 @@ Tech Stack
 - Tailwind CSS
 - React-Hook-Form
 
-##主要內容
+## 主要內容
 - [Login Page](#login-page)
 - [Home Page](#home-page)
 - [Issue Detail Page](#issue-detail-page)
