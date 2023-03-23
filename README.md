@@ -62,7 +62,7 @@ const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
 [GitHub Issue API](https://docs.github.com/en/rest/issues/issues?apiVersion=2022-11-28)
 
 1. 展示該 issue 的詳細內容
-   - 藉由 `GetServersideProps` 獲得 initial issue data 放入 useQuery 中，方便未來 refetch data
+   - 藉由 `GetServersideProps` 獲得 initial issue data 放入 `useQuery` 中，方便未來 refetch data
   ```javascript
   export const getServerSideProps: GetServerSideProps<ComponentProps> = async (
   context
@@ -99,7 +99,7 @@ const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
   );
   ```
 2. 在 Edit 的 modal 中可以編輯 title 及 body, 此外也能夠更新 label(done/in progress/ open)
-   - 使用 useMutation 來更新資料，onSucceess 後 revalidate useQuery
+   - 使用 `useMutation` 來更新資料，onSucceess 後 revalidate useQuery
    ```javascript
    const updateIssueMutation = useMutation(updateIssue, {
     onSuccess: () => {
@@ -107,7 +107,8 @@ const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
       queryClient.invalidateQueries(["issue"]);
     },
     onError: (error) => {
-      alert(error);
+      console.log(error);
+      alert("something went wrong");
     },
    });
    ```
@@ -121,7 +122,8 @@ const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
       queryClient.invalidateQueries(["issue", "issues"]);
     },
     onError: (error) => {
-      alert(error);
+      console.log(error);
+      alert("something went wrong");
     },
    });
    ```
