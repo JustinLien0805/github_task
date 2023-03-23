@@ -1,7 +1,6 @@
 # GitHub Task Manageer
 
-
-網站連結：[https://github-task-nine.vercel.app/](https://github-task-nine.vercel.app/)
+網站連結：[https://github-task-manager.vercel.app/](https://github-task-manager.vercel.app/)
 
 Tech Stack
 
@@ -12,17 +11,11 @@ Tech Stack
 - React-Hook-Form
 
 ## 主要內容
-- [Login Page](#login-page)
-- [Home Page](#home-page)
-- [Issue Detail Page](#issue-detail-page)
-=======
-##主要內容
-
 - [GitHub Task Manageer](#github-task-manageer)
+  - [主要內容](#主要內容)
   - [Login Page](#login-page)
   - [Home Page](#home-page)
   - [Issue Detail page](#issue-detail-page)
-
 
 ## Login Page
 
@@ -63,8 +56,9 @@ const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
 
 1. 展示該 issue 的詳細內容
    - 藉由 `GetServersideProps` 獲得 initial issue data 放入 `useQuery` 中，方便未來 refetch data
-  ```javascript
-  export const getServerSideProps: GetServerSideProps<ComponentProps> = async (
+
+```javascript
+export const getServerSideProps: GetServerSideProps<ComponentProps> = async (
   context
 ) => {
   const url = context.query.url;
@@ -73,7 +67,7 @@ const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
       notFound: true,
     };
   }
-  
+
   const data = await fetchIssueByUrl(url);
 
   return {
@@ -82,48 +76,50 @@ const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
     },
   };
 };
-  ```
-  ```javascript
-  const { data } = useQuery(
-    ["issue"],
-    async () => {
-      if (typeof url !== "string") {
-        throw new Error("Invalid URL type");
-      }
-      const { data } = await axios.get<Issue>(url);
-      return data;
-    },
-    {
-      initialData: issueData,
+```
+
+```javascript
+const { data } = useQuery(
+  ["issue"],
+  async () => {
+    if (typeof url !== "string") {
+      throw new Error("Invalid URL type");
     }
-  );
-  ```
+    const { data } = (await axios.get) < Issue > url;
+    return data;
+  },
+  {
+    initialData: issueData,
+  }
+);
+```
+
 2. 在 Edit 的 modal 中可以編輯 title 及 body, 此外也能夠更新 label(done/in progress/ open)
    - 使用 `useMutation` 來更新資料，onSucceess 後 revalidate useQuery
    ```javascript
    const updateIssueMutation = useMutation(updateIssue, {
-    onSuccess: () => {
-      alert("Issue updated successfully");
-      queryClient.invalidateQueries(["issue"]);
-    },
-    onError: (error) => {
-      console.log(error);
-      alert("something went wrong");
-    },
+     onSuccess: () => {
+       alert("Issue updated successfully");
+       queryClient.invalidateQueries(["issue"]);
+     },
+     onError: (error) => {
+       console.log(error);
+       alert("something went wrong");
+     },
    });
    ```
 3. Delete button 會將此 issue 的 state 轉為 close 並 redirect 回 home page
    - 使用 useMutation 來 close，onSucceess 後 redirect to home page
    ```javascript
    const closeIssueMutation = useMutation(closeIssue, {
-    onSuccess: () => {
-      alert("Issue closed successfully");
-      router.push("/home");
-      queryClient.invalidateQueries(["issue", "issues"]);
-    },
-    onError: (error) => {
-      console.log(error);
-      alert("something went wrong");
-    },
+     onSuccess: () => {
+       alert("Issue closed successfully");
+       router.push("/home");
+       queryClient.invalidateQueries(["issue", "issues"]);
+     },
+     onError: (error) => {
+       console.log(error);
+       alert("something went wrong");
+     },
    });
    ```
