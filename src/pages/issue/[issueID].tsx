@@ -8,6 +8,7 @@ import { z } from "zod";
 import { useSession } from "next-auth/react";
 import { type GetServerSideProps } from "next";
 import { getRepoUrl, getRepoName } from "~/utils/common";
+import { BounceLoader } from "react-spinners";
 interface Issue {
   id: number;
   url: string;
@@ -117,7 +118,6 @@ const Issue = ({ issueData }: ComponentProps) => {
       alert("something went wrong");
     },
   });
-
   // close issue
   async function closeIssue(url: string | string[] | undefined) {
     const config = {
@@ -126,7 +126,6 @@ const Issue = ({ issueData }: ComponentProps) => {
         Authorization: `Bearer ${session?.accessToken}`,
       },
     };
-
     const data = {
       state: "closed",
     };
@@ -154,7 +153,13 @@ const Issue = ({ issueData }: ComponentProps) => {
 
   return (
     <>
-      <div className="flex h-screen w-screen flex-col items-center gap-8 px-2 pt-8 sm:py-20 sm:px-8">
+      <div className="reletive flex h-screen w-screen flex-col items-center gap-8 px-2 pt-8 sm:py-20 sm:px-8">
+        {closeIssueMutation.isLoading && (
+          <div className="absolute top-0 left-0 z-50 flex h-full w-full flex-col items-center justify-center gap-2 bg-black/50">
+            <BounceLoader color="#fafafa" />
+            <h2>Loading...</h2>
+          </div>
+        )}
         <nav className="flex w-full max-w-2xl items-center sm:w-3/5">
           <h1
             className="mr-auto cursor-pointer text-2xl font-bold sm:text-3xl"
@@ -189,8 +194,8 @@ const Issue = ({ issueData }: ComponentProps) => {
             <div className=" badge-info badge mr-auto">
               {data?.labels?.length > 0 ? data?.labels[0]?.name : "no label"}
             </div>
-            <p>Created at: {data?.created_at}</p>
           </div>
+          <p>Created at: {data?.created_at}</p>
           {data?.repository_url && (
             <p className="text-lg">
               From:{" "}
@@ -225,6 +230,12 @@ const Issue = ({ issueData }: ComponentProps) => {
       <input type="checkbox" id="my-modal" className="modal-toggle" />
       <div className="modal">
         <div className="reletive modal-box">
+          {updateIssueMutation.isLoading && (
+            <div className="absolute top-0 left-0 z-50 flex h-full w-full flex-col items-center justify-center gap-2 bg-black/50">
+              <BounceLoader color="#fafafa" />
+              <h2>Loading...</h2>
+            </div>
+          )}
           <label
             htmlFor="my-modal"
             className="btn-sm btn-circle btn absolute right-2 top-2"

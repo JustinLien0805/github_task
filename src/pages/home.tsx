@@ -6,7 +6,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import Issue from "~/components/Issue";
-
+import { BounceLoader } from "react-spinners";
 type Issue = {
   items: Array<{
     id: number;
@@ -78,7 +78,7 @@ const Home: NextPage = () => {
     return data;
   }
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
     useInfiniteQuery(
       ["issues"],
       ({ pageParam = 1 }) => fetchIssues(pageParam),
@@ -234,9 +234,12 @@ const Home: NextPage = () => {
             : issuesList.map((issue, i) =>
                 issue.items?.map((item) => <Issue key={item.id} item={item} />)
               )}
-          {isFetchingNextPage && (
-            <li className="text-center">Loading more...</li>
-          )}
+          {isFetchingNextPage ||
+            (isLoading && (
+              <li className="flex items-center justify-center">
+                <BounceLoader color="#fafafa" />
+              </li>
+            ))}
           {!hasNextPage && <li className="text-center">End of issues</li>}
         </ul>
       </div>
