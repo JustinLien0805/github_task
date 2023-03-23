@@ -5,9 +5,8 @@ import axios from "axios";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { useSession, getSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { type GetServerSideProps } from "next";
-import { type Session } from "next-auth";
 import { getRepoUrl, getRepoName } from "~/utils/common";
 interface Issue {
   id: number;
@@ -24,7 +23,6 @@ interface Issue {
   };
 }
 interface ComponentProps {
-  session: Session | null;
   issueData: Issue;
 }
 
@@ -34,7 +32,7 @@ const IssueFormSchema = z.object({
   label: z.string().min(1, "Label is required"),
 });
 
-const Issue = (issueData: Issue) => {
+const Issue = ({ issueData }: ComponentProps) => {
   const router = useRouter();
   const { data: session } = useSession();
   const { url } = router.query;
@@ -329,20 +327,17 @@ async function fetchIssueByUrl(url: string): Promise<Issue> {
 export const getServerSideProps: GetServerSideProps<ComponentProps> = async (
   context
 ) => {
-  const session = await getSession(context);
   const url = context.query.url;
-
   if (typeof url !== "string") {
     return {
       notFound: true,
     };
   }
-
+  
   const data = await fetchIssueByUrl(url);
 
   return {
     props: {
-      session,
       issueData: data,
     },
   };
