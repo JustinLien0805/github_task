@@ -103,6 +103,7 @@ const Issue = ({ issueData }: ComponentProps) => {
       return titleBodyResponse.data;
     } catch (error) {
       console.log(error);
+      alert("something went wrong");
     }
   }
 
@@ -112,7 +113,8 @@ const Issue = ({ issueData }: ComponentProps) => {
       queryClient.invalidateQueries(["issue"]);
     },
     onError: (error) => {
-      alert(error);
+      console.log(error);
+      alert("something went wrong");
     },
   });
 
@@ -333,7 +335,7 @@ export const getServerSideProps: GetServerSideProps<ComponentProps> = async (
       notFound: true,
     };
   }
-  
+
   const data = await fetchIssueByUrl(url);
 
   return {
