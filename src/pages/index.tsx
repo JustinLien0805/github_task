@@ -1,15 +1,14 @@
 import { type NextPage } from "next";
 import Head from "next/head";
-
-import { signIn, signOut, useSession } from "next-auth/react";
-
+import { signIn, useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
+
 const Home: NextPage = () => {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const handleSignIn = async () => {
-    await signIn();
+  const handleSignIn = () => {
+    signIn();
   };
 
   useEffect(() => {
