@@ -2,20 +2,21 @@
 
 網站連結：[https://github-task-manager.vercel.app/](https://github-task-manager.vercel.app/)
 
-Tech Stack
+## 目錄
+  - [Tech Stack](#tech-stack)
+  - [Login Page](#login-page)
+  - [Home Page](#home-page)
+  - [Issue Detail page](#issue-detail-page)
 
+## Tech Stack
 - Next.js
 - TypeScript
 - React Query
 - Tailwind CSS
 - React-Hook-Form
 
-## 主要內容
-- [GitHub Task Manageer](#github-task-manageer)
-  - [主要內容](#主要內容)
-  - [Login Page](#login-page)
-  - [Home Page](#home-page)
-  - [Issue Detail page](#issue-detail-page)
+
+
 
 ## Login Page
 
@@ -94,8 +95,10 @@ const { data } = useQuery(
 );
 ```
 
+
 2. 在 Edit 的 modal 中可以編輯 title 及 body, 此外也能夠更新 label(done/in progress/ open)
    - 使用 `useMutation` 來更新資料，onSucceess 後 revalidate useQuery
+   
    ```javascript
    const updateIssueMutation = useMutation(updateIssue, {
      onSuccess: () => {
@@ -110,6 +113,7 @@ const { data } = useQuery(
    ```
 3. Delete button 會將此 issue 的 state 轉為 close 並 redirect 回 home page
    - 使用 useMutation 來 close，onSucceess 後 redirect to home page
+   
    ```javascript
    const closeIssueMutation = useMutation(closeIssue, {
      onSuccess: () => {
