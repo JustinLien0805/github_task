@@ -11,7 +11,6 @@ Tech Stack
 - Tailwind CSS
 - React-Hook-Form
 
-<<<<<<< HEAD
 ## 主要內容
 - [Login Page](#login-page)
 - [Home Page](#home-page)
@@ -23,7 +22,7 @@ Tech Stack
   - [Login Page](#login-page)
   - [Home Page](#home-page)
   - [Issue Detail page](#issue-detail-page)
->>>>>>> 5d693b1 (update README.md and clean up [issueID].tsx)
+
 
 ## Login Page
 
