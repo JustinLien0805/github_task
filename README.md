@@ -27,29 +27,33 @@
 ## Home Page
 
 ```javascript
-const url = `https://api.github.com/search/issues?q=author:${username}+type:issue+is:open+-is:pr&sort=created&order=desc&per_page=${pageSize}&page=${pageNumber}`;
+const url = `https://api.github.com/search/issues?q=${textQuery}author:${username}+type:issue+is:open+-is:pr${labelQuery}&sort=created&order=${query.sortTime}&per_page=${pageSize}&page=${pageParam}`;
 ```
 
-url: 搜尋所有作者為使用者的 open issue，去除掉 pull request，並以 desc 排序，每次回傳 10 筆資料
+url: 查詢所有作者為使用者的 open issue，去除掉 pull request，並以 desc 排序，label 及 title, body text 作為條件搜尋，每次回傳 10 筆資料
 
 [GitHub Search API](https://docs.github.com/en/rest/search?apiVersion=2022-11-28#search-issues-and-pull-requests)
 
 ```javascript
-const { data, fetchNextPage, hasNextPage, isFetchingNextPage } =
-  useInfiniteQuery(["issues"], ({ pageParam = 1 }) => fetchIssues(pageParam), {
-    getNextPageParam: (lastPage, allPages) => {
-      const maxpages = Math.ceil(lastPage.total_count / 10);
-      const nextpage = allPages.length + 1;
-      return nextpage <= maxpages ? nextpage : undefined;
-    },
-  });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useInfiniteQuery(
+      ["issues", query],
+      ({ pageParam = 1 }) => fetchIssues({ pageParam }),
+      {
+        getNextPageParam: (lastPage, allPages) => {
+          const maxpages = Math.ceil(lastPage.total_count / 10);
+          const nextpage = allPages.length + 1;
+          return nextpage <= maxpages ? nextpage : undefined;
+        },
+        onError(err) {
+          console.error("error", err);
+        },
+      }
+    );
 ```
+在 custom hook `useFilteredIssues` 中用 React Query 中的 `useInfiniteQuery` 搭配 useEffect 及 eventlistener 達成 infinite scroll，每次滑到底時都發送 API 載入額外 10 筆資料
 
-用 React Query 中的 `useInfiniteQuery` 搭配 useEffect 及 eventlistener 達成 infinite scroll
-
-每次滑到底時都發送 API 載入額外 10 筆資料
-
-另外設有 search bar, label, sorted by ASC/DESC 三種 filter ，可以同時對資料進行篩選
+另外設有 Query: text, label, sortedTime 三種 filter，query 改變時會發送新的 API，也有 infinite scroll 的功能
 
 ## Issue Detail page
 
