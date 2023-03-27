@@ -131,6 +131,11 @@ const Home: NextPage = () => {
           </button>
         </div>
         <ul className="flex flex-col gap-4">
+          {isError && (
+            <li className="text-center text-red-500">
+              API rate limit exceeded. Please and try again later.
+            </li>
+          )}
           {data?.pages.map((issue: Issue) =>
             issue.items?.map((item) => <Issue key={item.id} item={item} />)
           )}
@@ -142,11 +147,6 @@ const Home: NextPage = () => {
             ))}
           {!hasNextPage && !isError && (
             <li className="text-center">End of issues</li>
-          )}
-          {isError && (
-            <li className="text-center text-red-500">
-              API rate limit exceeded. Please and try again later.
-            </li>
           )}
         </ul>
       </div>
