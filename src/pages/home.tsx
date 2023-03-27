@@ -63,7 +63,7 @@ const Home: NextPage = () => {
   //     console.error(error);
   //   }
   // }
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+  const { data, hasNextPage, isFetchingNextPage, isLoading, isError } =
     useFilteredIssues(query);
   // fetch issues by username
   // after getting the username fetch issues with labels and exclude pull requests and sort by created date in descending order wtih pagination
@@ -103,18 +103,18 @@ const Home: NextPage = () => {
   //     setIssuesList(newIssuesList);
   //   }
   // }, [data]);
-  useEffect(() => {
-    const onScroll = (event: any) => {
-      const { scrollHeight, scrollTop, clientHeight } =
-        event.target.documentElement;
-      if (scrollHeight - scrollTop === clientHeight) {
-        console.log("bottom");
-        fetchNextPage();
-      }
-    };
-    document.addEventListener("scroll", onScroll);
-    return () => document.removeEventListener("scroll", onScroll);
-  }, []);
+  // useEffect(() => {
+  //   const onScroll = (event: any) => {
+  //     const { scrollHeight, scrollTop, clientHeight } =
+  //       event.target.documentElement;
+  //     if (scrollHeight - scrollTop === clientHeight) {
+  //       console.log("bottom");
+  //       fetchNextPage();
+  //     }
+  //   };
+  //   document.addEventListener("scroll", onScroll);
+  //   return () => document.removeEventListener("scroll", onScroll);
+  // }, []);
 
   // const filteredIssues = useMemo(() => {
   //   const textFilter = issuesList
@@ -252,7 +252,14 @@ const Home: NextPage = () => {
                 <BounceLoader color="#fafafa" />
               </li>
             ))}
-          {!hasNextPage && <li className="text-center">End of issues</li>}
+          {!hasNextPage && !isError && (
+            <li className="text-center">End of issues</li>
+          )}
+          {isError && (
+            <li className="text-center text-red-500">
+              API rate limit exceeded. Please and try again later.
+            </li>
+          )}
         </ul>
       </div>
     </>

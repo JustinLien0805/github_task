@@ -1,6 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { useSession } from "next-auth/react";
+import { useEffect } from "react";
 
 type Query = {
   text: string;
@@ -9,7 +10,6 @@ type Query = {
 };
 
 function useFilteredIssues(query: Query) {
-  console.log(query);
   const { data: session } = useSession();
   async function getAuthenticatedUsername(accessToken: string) {
     try {
@@ -31,6 +31,7 @@ function useFilteredIssues(query: Query) {
     }
   }
 
+  // query function
   async function fetchIssues({ pageParam = 1 }: { pageParam?: number }) {
     if (!session?.accessToken) {
       throw new Error("No access token");
@@ -54,28 +55,55 @@ function useFilteredIssues(query: Query) {
     }
 
     const url = `https://api.github.com/search/issues?q=${textQuery}author:${username}+type:issue+is:open+-is:pr${labelQuery}&sort=created&order=${query.sortTime}&per_page=${pageSize}&page=${pageParam}`;
-    console.log(url);
+
     const { data } = await axios.get(url);
     return data;
   }
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useInfiniteQuery(
-      ["issues", query],
-      ({ pageParam = 1 }) => fetchIssues({ pageParam }),
-      {
-        getNextPageParam: (lastPage, allPages) => {
-          const maxpages = Math.ceil(lastPage.total_count / 10);
-          const nextpage = allPages.length + 1;
-          return nextpage <= maxpages ? nextpage : undefined;
-        },
-        onError(err) {
-          console.error("error", err);
-        },
-      }
-    );
+  // useInfiniteQuery for pagination
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+  } = useInfiniteQuery(
+    ["issues", query],
+    ({ pageParam = 1 }) => fetchIssues({ pageParam }),
+    {
+      getNextPageParam: (lastPage, allPages) => {
+        const maxpages = Math.ceil(lastPage.total_count / 10);
+        const nextpage = allPages.length + 1;
+        return nextpage <= maxpages ? nextpage : undefined;
+      },
+      onError(err) {
+        console.error("error", err);
+      },
+    }
+  );
 
-  return { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading };
+  // Scroll to bottom to fetch more issues
+  useEffect(() => {
+    const onScroll = (event: any) => {
+      const { scrollHeight, scrollTop, clientHeight } =
+        event.target.documentElement;
+      if (scrollHeight - scrollTop === clientHeight) {
+        console.log("bottom");
+        fetchNextPage();
+      }
+    };
+    document.addEventListener("scroll", onScroll);
+    return () => document.removeEventListener("scroll", onScroll);
+  }, []);
+
+  return {
+    data,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+  };
 }
 
 export default useFilteredIssues;
