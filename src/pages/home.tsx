@@ -1,13 +1,14 @@
 import { type NextPage } from "next";
-import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react";
+// import axios from "axios";
 import { useSession } from "next-auth/react";
-import { useInfiniteQuery } from "@tanstack/react-query";
+// import { useInfiniteQuery } from "@tanstack/react-query";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/router";
 import Issue from "~/components/Issue";
 import { BounceLoader } from "react-spinners";
 import Head from "next/head";
+import useFilteredIssues from "~/utils/useFilteredIssues";
 type Issue = {
   items: Array<{
     id: number;
@@ -28,11 +29,11 @@ type Query = {
 };
 
 const Home: NextPage = () => {
-  const [issuesList, setIssuesList] = useState<Array<Issue>>([]);
+  // const [issuesList, setIssuesList] = useState<Array<Issue>>([]);
   const [query, setQuery] = useState<Query>({
     text: "",
     label: "",
-    sortTime: "",
+    sortTime: "desc",
   });
   const { data: session, status } = useSession();
 
@@ -43,61 +44,65 @@ const Home: NextPage = () => {
     }
   }, [status]);
 
-  async function getAuthenticatedUsername(accessToken: string) {
-    try {
-      const {
-        data,
-      }: {
-        data: {
-          login: string;
-        };
-      } = await axios.get("https://api.github.com/user", {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      const username = data.login;
-      return username;
-    } catch (error) {
-      console.error(error);
-    }
-  }
-
+  // async function getAuthenticatedUsername(accessToken: string) {
+  //   try {
+  //     const {
+  //       data,
+  //     }: {
+  //       data: {
+  //         login: string;
+  //       };
+  //     } = await axios.get("https://api.github.com/user", {
+  //       headers: {
+  //         Authorization: `Bearer ${accessToken}`,
+  //       },
+  //     });
+  //     const username = data.login;
+  //     return username;
+  //   } catch (error) {
+  //     console.error(error);
+  //   }
+  // }
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+    useFilteredIssues(query);
   // fetch issues by username
   // after getting the username fetch issues with labels and exclude pull requests and sort by created date in descending order wtih pagination
-  async function fetchIssues(pageNumber = 0) {
-    if (!session?.accessToken) {
-      throw new Error("No access token");
-    }
-    const username = await getAuthenticatedUsername(session?.accessToken);
-    const pageSize = 10;
-    if (!username) {
-      throw new Error("No username");
-    }
-    const url = `https://api.github.com/search/issues?q=author:${username}+type:issue+is:open+-is:pr&sort=created&order=desc&per_page=${pageSize}&page=${pageNumber}`;
-    const { data } = await axios.get(url);
-    return data;
-  }
+  // async function fetchIssues(pageNumber = 0) {
+  //   if (!session?.accessToken) {
+  //     throw new Error("No access token");
+  //   }
+  //   const username = await getAuthenticatedUsername(session?.accessToken);
+  //   const pageSize = 10;
+  //   if (!username) {
+  //     throw new Error("No username");
+  //   }
+  //   // const url = `https://api.github.com/search/issues?q=author:${username}+type:issue+is:open+-is:pr&sort=created&order=desc&per_page=${pageSize}&page=${pageNumber}`;
+  //   const url = `https://api.github.com/search/issues?q=author:${username}+type:issue+is:open+-is:pr+label:"in%20progress"&sort=created&order=asc&per_page=${pageSize}&page=${pageNumber}`;
+  //   console.log(url);
+  //   const { data } = await axios.get(url);
+  //   return data;
+  // }
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
-    useInfiniteQuery(
-      ["issues"],
-      ({ pageParam = 1 }) => fetchIssues(pageParam),
-      {
-        getNextPageParam: (lastPage, allPages) => {
-          const maxpages = Math.ceil(lastPage.total_count / 10);
-          const nextpage = allPages.length + 1;
-          return nextpage <= maxpages ? nextpage : undefined;
-        },
-      }
-    );
+  // const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading } =
+  //   useInfiniteQuery(
+  //     ["issues"],
+  //     ({ pageParam = 1 }) => fetchIssues(pageParam),
+  //     {
+  //       getNextPageParam: (lastPage, allPages) => {
+  //         const maxpages = Math.ceil(lastPage.total_count / 10);
+  //         const nextpage = allPages.length + 1;
+  //         return nextpage <= maxpages ? nextpage : undefined;
+  //       },
+  //     }
+  //   );
 
-  useEffect(() => {
-    if (data) {
-      const newIssuesList: Array<Issue> = data.pages;
-      setIssuesList(newIssuesList);
-    }
-  }, [data]);
+  // useEffect(() => {
+  //   if (data) {
+  //     console.log(data.pages);
+  //     const newIssuesList: Array<Issue> = data.pages;
+  //     setIssuesList(newIssuesList);
+  //   }
+  // }, [data]);
   useEffect(() => {
     const onScroll = (event: any) => {
       const { scrollHeight, scrollTop, clientHeight } =
@@ -111,42 +116,42 @@ const Home: NextPage = () => {
     return () => document.removeEventListener("scroll", onScroll);
   }, []);
 
-  const filteredIssues = useMemo(() => {
-    const textFilter = issuesList
-      .flatMap((issue) => issue.items)
-      .filter((item) => {
-        const matchTitle = item?.title
-          ?.toLowerCase()
-          .includes(query.text.toLowerCase());
-        const matchBody = item?.body
-          ?.toLowerCase()
-          .includes(query.text.toLowerCase());
-        return matchTitle || matchBody;
-      });
+  // const filteredIssues = useMemo(() => {
+  //   const textFilter = issuesList
+  //     .flatMap((issue) => issue.items)
+  //     .filter((item) => {
+  //       const matchTitle = item?.title
+  //         ?.toLowerCase()
+  //         .includes(query.text.toLowerCase());
+  //       const matchBody = item?.body
+  //         ?.toLowerCase()
+  //         .includes(query.text.toLowerCase());
+  //       return matchTitle || matchBody;
+  //     });
 
-    const labelFilter = textFilter.filter((item) => {
-      if (query.label === "") {
-        return true; // No label query specified, so include all issues
-      } else {
-        return item.labels.some(
-          (label) => label.name.toLowerCase() === query.label.toLowerCase()
-        );
-      }
-    });
-    let timeFilter = labelFilter;
-    if (query.sortTime === "ASC") {
-      timeFilter = timeFilter.sort(
-        (a, b) =>
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      );
-    } else if (query.sortTime === "DESC") {
-      timeFilter = timeFilter.sort(
-        (a, b) =>
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-    }
-    return timeFilter;
-  }, [query, issuesList]);
+  //   const labelFilter = textFilter.filter((item) => {
+  //     if (query.label === "") {
+  //       return true; // No label query specified, so include all issues
+  //     } else {
+  //       return item.labels.some(
+  //         (label) => label.name.toLowerCase() === query.label.toLowerCase()
+  //       );
+  //     }
+  //   });
+  //   let timeFilter = labelFilter;
+  //   if (query.sortTime === "ASC") {
+  //     timeFilter = timeFilter.sort(
+  //       (a, b) =>
+  //         new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  //     );
+  //   } else if (query.sortTime === "DESC") {
+  //     timeFilter = timeFilter.sort(
+  //       (a, b) =>
+  //         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  //     );
+  //   }
+  //   return timeFilter;
+  // }, [query, issuesList]);
 
   const handleQueryChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setQuery({ ...query, text: event.target.value });
@@ -159,7 +164,7 @@ const Home: NextPage = () => {
         <meta name="description" content="Generated by create-t3-app" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <div className="flex w-full flex-col justify-center gap-8 pt-8 sm:py-20 px-2 sm:px-8">
+      <div className="flex w-full flex-col justify-center gap-8 px-2 pt-8 sm:py-20 sm:px-8">
         <div className="flex items-center">
           <h1 className="text-2xl font-bold sm:text-3xl">
             Github Task Manager
@@ -223,23 +228,24 @@ const Home: NextPage = () => {
           </div>
           <button
             className="btn m-1"
-            onClick={() =>
+            onClick={() => {
               setQuery({
                 text: "",
                 label: "",
-                sortTime: "",
-              })
-            }
+                sortTime: "desc",
+              });
+            }}
           >
             clear filter
           </button>
         </div>
         <ul className="flex flex-col gap-4">
-          {query
-            ? filteredIssues.map((item) => <Issue key={item.id} item={item} />)
-            : issuesList.map((issue, i) =>
-                issue.items?.map((item) => <Issue key={item.id} item={item} />)
-              )}
+          {/* {filteredIssues.map((item) => <Issue key={item.id} item={item} />)
+            : */}
+          {data?.pages.map((issue: Issue) =>
+            issue.items?.map((item) => <Issue key={item.id} item={item} />)
+          )}
+          {/* } */}
           {isFetchingNextPage ||
             (isLoading && (
               <li className="flex items-center justify-center">
