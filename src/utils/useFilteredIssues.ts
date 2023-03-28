@@ -42,7 +42,7 @@ function useFilteredIssues(query: Query) {
     if (!username) {
       throw new Error("No username");
     }
-    console.log(typeof query.text);
+
     const textQuery =
       query.text.length > 0 ? `${query.text}+in:title|body+` : "";
     let labelQuery = "";
@@ -89,7 +89,6 @@ function useFilteredIssues(query: Query) {
       const { scrollHeight, scrollTop, clientHeight } =
         event.target.documentElement;
       if (scrollHeight - scrollTop === clientHeight) {
-        console.log("bottom");
         fetchNextPage();
       }
     };
