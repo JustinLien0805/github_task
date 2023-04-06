@@ -10,6 +10,7 @@ import { type GetServerSideProps } from "next";
 import { getRepoUrl, getRepoName } from "~/utils/common";
 import { BounceLoader } from "react-spinners";
 import Head from "next/head";
+import { Toast } from "flowbite-react";
 interface Issue {
   id: number;
   url: string;
@@ -111,12 +112,10 @@ const Issue = ({ issueData }: ComponentProps) => {
 
   const updateIssueMutation = useMutation(updateIssue, {
     onSuccess: () => {
-      alert("Issue updated successfully");
       queryClient.invalidateQueries(["issue"]);
     },
     onError: (error) => {
       console.log(error);
-      alert("something went wrong");
     },
   });
   // close issue
@@ -143,12 +142,8 @@ const Issue = ({ issueData }: ComponentProps) => {
 
   const closeIssueMutation = useMutation(closeIssue, {
     onSuccess: () => {
-      alert("Issue closed successfully");
       router.push("/home");
       queryClient.invalidateQueries(["issue", "issues"]);
-    },
-    onError: (error) => {
-      alert(error);
     },
   });
 
@@ -235,7 +230,25 @@ const Issue = ({ issueData }: ComponentProps) => {
       {/* modal for edit title and body */}
       <input type="checkbox" id="my-modal" className="modal-toggle" />
       <div className="modal">
-        <div className="reletive modal-box">
+        <div className="absolute bottom-10 right-4 flex flex-col gap-4">
+          {updateIssueMutation.isError && (
+            <Toast className="bg-error">
+              <div className="ml-3 text-lg font-normal text-base-100">
+                Something went wrong.
+              </div>
+              <Toast.Toggle />
+            </Toast>
+          )}
+          {updateIssueMutation.isSuccess && (
+            <Toast className="bg-success">
+              <div className="ml-3 text-lg font-normal text-base-100">
+                Success!
+              </div>
+              <Toast.Toggle />
+            </Toast>
+          )}
+        </div>
+        <div className="reletive modal-box border-2">
           {updateIssueMutation.isLoading && (
             <div className="absolute top-0 left-0 z-50 flex h-full w-full flex-col items-center justify-center gap-2 bg-black/50">
               <BounceLoader color="#fafafa" />
@@ -244,7 +257,7 @@ const Issue = ({ issueData }: ComponentProps) => {
           )}
           <label
             htmlFor="my-modal"
-            className="btn-sm btn-circle btn absolute right-2 top-2"
+            className="btn-primary btn-sm btn-circle btn absolute right-2 top-2"
           >
             ✕
           </label>
@@ -325,7 +338,7 @@ const Issue = ({ issueData }: ComponentProps) => {
               )}
             </div>
             <div className="modal-action">
-              <button type="submit" className="btn">
+              <button type="submit" className="btn-primary btn">
                 Save
               </button>
             </div>
