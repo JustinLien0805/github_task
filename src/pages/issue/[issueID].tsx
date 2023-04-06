@@ -176,7 +176,7 @@ const Issue = ({ issueData }: ComponentProps) => {
             Github Task Manager
           </h1>
           <button
-            className="btn"
+            className="btn-primary btn"
             onClick={() => {
               router.push("/home");
             }}

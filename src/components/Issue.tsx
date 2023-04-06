@@ -31,9 +31,9 @@ const Issue = ({ item }: Props) => {
         <h1 className="text-xl font-bold">{item.title}</h1>
 
         {item.labels?.length > 0 ? (
-          <p className=" badge-info badge">{item.labels[0]?.name}</p>
+          <p className="badge-info badge">{item.labels[0]?.name}</p>
         ) : (
-          <p className=" badge-info badge">no label</p>
+          <p className="badge-info badge">no label</p>
         )}
       </div>
       <p className="text-lg">From: {getRepoName(item.repository_url || "")}</p>

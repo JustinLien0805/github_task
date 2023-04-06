@@ -30,7 +30,7 @@ const Home: NextPage = () => {
           Simplify your GitHub issue management with GitHub Issue Manager. Sign
           in now and start getting things done.
         </h2>
-        <button className="btn" onClick={handleSignIn}>
+        <button className="btn-primary btn" onClick={handleSignIn}>
           sign in with GitHub
         </button>
       </div>
