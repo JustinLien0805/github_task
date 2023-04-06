@@ -78,7 +78,7 @@ const Home: NextPage = () => {
             </label>
             <ul
               tabIndex={0}
-              className="dropdown-content menu rounded-box w-52 bg-base-300 p-2 shadow"
+              className="dropdown-content menu rounded-box w-52 bg-[#2a2a2a] p-2 shadow"
             >
               <li>
                 <a onClick={() => setQuery({ ...query, label: "done" })}>
@@ -103,7 +103,7 @@ const Home: NextPage = () => {
             </label>
             <ul
               tabIndex={1}
-              className="dropdown-content menu rounded-box w-52 bg-base-300 p-2 shadow"
+              className="dropdown-content menu rounded-box w-52 bg-[#2a2a2a] p-2 shadow"
             >
               <li>
                 <a onClick={() => setQuery({ ...query, sortTime: "asc" })}>
