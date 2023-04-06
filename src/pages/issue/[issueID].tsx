@@ -232,7 +232,7 @@ const Issue = ({ issueData }: ComponentProps) => {
       <div className="modal">
         <div className="absolute bottom-10 right-4 flex flex-col gap-4">
           {updateIssueMutation.isError && (
-            <Toast className="bg-error">
+            <Toast className="gap-4 bg-error">
               <div className="ml-3 text-lg font-normal text-base-100">
                 Something went wrong.
               </div>
@@ -240,7 +240,7 @@ const Issue = ({ issueData }: ComponentProps) => {
             </Toast>
           )}
           {updateIssueMutation.isSuccess && (
-            <Toast className="bg-success">
+            <Toast className="gap-4 bg-success">
               <div className="ml-3 text-lg font-normal text-base-100">
                 Success!
               </div>
