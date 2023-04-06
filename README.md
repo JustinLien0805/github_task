@@ -2,6 +2,8 @@
 
 網站連結：[https://github-task-manager.vercel.app/](https://github-task-manager.vercel.app/)
 
+<img src="https://user-images.githubusercontent.com/74034793/230362162-840f10f8-5b63-4354-ae86-c6625bbaf828.png" width="600"/>
+
 ## 目錄
   - [Tech Stack](#tech-stack)
   - [Login Page](#login-page)
